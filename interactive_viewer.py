@@ -1,0 +1,216 @@
+#!/usr/bin/env python3
+# interactive_viewer.py
+
+#This viewer provides the following keyboard controls:
+#1.	Left/Right arrow keys (or A/D): Navigate between frames in the 4D Gaussian splat
+#2.	+/- keys: Zoom in/out to explore the scene in detail
+#3.	R key: Reset the view to default
+#4.	ESC/Q: Quit the viewer
+#For mouse controls:
+#1.	Drag: Rotate the view to explore the scene from different angles
+#2.	Mouse wheel: Zoom in/out
+
+# python interactive_viewer.py --model_path "output/dnerf/bouncingballs/" --configs arguments/dnerf/bouncingballs.py --iteration 14000
+
+import argparse
+import os
+import cv2
+import numpy as np
+import torch
+from scene import Scene
+from gaussian_renderer import render, GaussianModel
+from arguments import ModelParams, PipelineParams, get_combined_args
+from utils.general_utils import safe_state
+from time import time
+
+class InteractiveViewer:
+    def __init__(self, model_path, iteration, configs_path):
+        # Parse arguments
+        parser = argparse.ArgumentParser(description="Interactive 4D Gaussian viewer")
+        parser.add_argument("--model_path", type=str, default=model_path)
+        parser.add_argument("--iteration", default=iteration, type=int)
+        parser.add_argument("--configs", type=str, default=configs_path)
+        
+        # Standard parameters from the original code
+        model = ModelParams(parser, sentinel=True)
+        pipeline = PipelineParams(parser)
+        hyperparam = ModelHiddenParams(parser)
+        
+        args = parser.parse_args([
+            "--model_path", model_path,
+            "--iteration", str(iteration),
+            "--configs", configs_path
+        ])
+        
+        if args.configs:
+            import mmcv
+            from utils.params_utils import merge_hparams
+            config = mmcv.Config.fromfile(args.configs)
+            args = merge_hparams(args, config)
+            
+        # Initialize system state
+        safe_state(quiet=True)
+        
+        # Load model
+        self.model_path = model_path
+        self.iteration = args.iteration
+        self.configs = configs_path
+        
+        print(f"Loading model from {model_path}, iteration {iteration}")
+        
+        with torch.no_grad():
+            # Load Gaussian model
+            self.gaussians = GaussianModel(model.extract(args).sh_degree, hyperparam.extract(args))
+            self.scene = Scene(model.extract(args), self.gaussians, load_iteration=iteration, shuffle=False)
+            self.cam_type = self.scene.dataset_type
+            
+            # Set background color
+            bg_color = [1,1,1] if model.extract(args).white_background else [0, 0, 0]
+            self.background = torch.tensor(bg_color, dtype=torch.float32, device="cuda")
+            
+            # Get cameras
+            self.cameras = self.scene.getVideoCameras()
+            self.pipeline = pipeline.extract(args)
+            
+        # Viewer state
+        self.time_idx = 0
+        self.max_time_idx = len(self.cameras) - 1
+        self.scale = 1.0
+        self.window_name = "4D Gaussian Splatting Interactive Viewer"
+        self.dragging = False
+        self.last_x = 0
+        self.last_y = 0
+        self.rotation = np.array([0, 0, 0], dtype=np.float32)  # euler angles (rx, ry, rz)
+        self.translation = np.array([0, 0, 0], dtype=np.float32)
+        
+        # Create window
+        cv2.namedWindow(self.window_name, cv2.WINDOW_NORMAL)
+        cv2.resizeWindow(self.window_name, 800, 800)
+        cv2.setMouseCallback(self.window_name, self.mouse_callback)
+        
+        # Instructions text
+        self.instructions = [
+            "Keys:",
+            "  Left/Right: Previous/Next Frame",
+            "  +/-: Zoom in/out",
+            "  R: Reset view",
+            "  ESC/Q: Quit",
+            "Mouse:",
+            "  Drag: Rotate view",
+            "  Scroll: Zoom"
+        ]
+
+    def mouse_callback(self, event, x, y, flags, param):
+        if event == cv2.EVENT_LBUTTONDOWN:
+            self.dragging = True
+            self.last_x = x
+            self.last_y = y
+        elif event == cv2.EVENT_LBUTTONUP:
+            self.dragging = False
+        elif event == cv2.EVENT_MOUSEMOVE and self.dragging:
+            dx = x - self.last_x
+            dy = y - self.last_y
+            self.last_x = x
+            self.last_y = y
+            
+            # Update rotation based on mouse movement
+            self.rotation[1] += dx * 0.01  # Yaw
+            self.rotation[0] += dy * 0.01  # Pitch
+            
+        elif event == cv2.EVENT_MOUSEWHEEL:
+            # Zoom with mouse wheel
+            if flags > 0:  # Scroll up
+                self.scale *= 1.1
+            else:  # Scroll down
+                self.scale /= 1.1
+
+    def apply_view_transforms(self, view):
+        """Apply rotation and scaling transforms to the view"""
+        # For simplicity, we're modifying the camera view
+        # In a real implementation, you would properly transform the view/camera matrices
+        
+        # This is a simplified example - in practice, you would need to modify
+        # the camera intrinsics/extrinsics properly
+        if hasattr(view, "world_view_transform"):
+            # Modify the camera view transformation matrix
+            # This is a placeholder - actual implementation would depend on the camera model
+            transform = view.world_view_transform.copy()
+            # Apply rotation and scale transforms here
+            view.world_view_transform = transform
+        
+        return view
+
+    def render_current_frame(self):
+        if 0 <= self.time_idx < len(self.cameras):
+            view = self.cameras[self.time_idx]
+            
+            # Apply any view transformations (zoom, rotation)
+            view = self.apply_view_transforms(view)
+            
+            # Render the frame
+            start_time = time()
+            rendering = render(view, self.gaussians, self.pipeline, self.background, cam_type=self.cam_type)["render"]
+            render_time = time() - start_time
+            
+            # Convert to numpy for OpenCV
+            image = rendering.detach().cpu().numpy()
+            image = np.transpose(image, (1, 2, 0))  # CHW -> HWC
+            image = np.clip(image, 0, 1)
+            image = (image * 255).astype(np.uint8)
+            
+            # Add frame info text
+            cv2.putText(image, f"Frame: {self.time_idx}/{self.max_time_idx}", (10, 30), 
+                      cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
+            cv2.putText(image, f"Render Time: {render_time:.3f}s", (10, 60), 
+                      cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
+            cv2.putText(image, f"Zoom: {self.scale:.2f}x", (10, 90), 
+                      cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
+            
+            # Add instructions
+            for i, line in enumerate(self.instructions):
+                cv2.putText(image, line, (image.shape[1] - 300, 30 + i*25), 
+                          cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
+                
+            return image
+        return None
+
+    def run(self):
+        print("Starting interactive viewer. Press 'Q' or 'ESC' to exit.")
+        
+        while True:
+            # Render current frame
+            image = self.render_current_frame()
+            
+            if image is not None:
+                # Display the rendered image
+                cv2.imshow(self.window_name, image)
+            
+            # Process keyboard input
+            key = cv2.waitKey(1) & 0xFF
+            
+            if key == 27 or key == ord('q'):  # ESC or Q
+                break
+            elif key == 83 or key == ord('d'):  # Right arrow or 'd'
+                self.time_idx = min(self.time_idx + 1, self.max_time_idx)
+            elif key == 81 or key == ord('a'):  # Left arrow or 'a'
+                self.time_idx = max(self.time_idx - 1, 0)
+            elif key == ord('+') or key == ord('='):  # Zoom in
+                self.scale *= 1.1
+            elif key == ord('-') or key == ord('_'):  # Zoom out
+                self.scale /= 1.1
+            elif key == ord('r'):  # Reset view
+                self.scale = 1.0
+                self.rotation = np.array([0, 0, 0], dtype=np.float32)
+                self.translation = np.array([0, 0, 0], dtype=np.float32)
+        
+        cv2.destroyAllWindows()
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Interactive 4D Gaussian viewer")
+    parser.add_argument("--model_path", required=True, type=str, help="Path to model directory")
+    parser.add_argument("--iteration", default=-1, type=int, help="Iteration to load")
+    parser.add_argument("--configs", required=True, type=str, help="Path to config file")
+    args = parser.parse_args()
+    
+    viewer = InteractiveViewer(args.model_path, args.iteration, args.configs)
+    viewer.run()

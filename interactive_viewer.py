@@ -11,6 +11,10 @@
 #2.	Mouse wheel: Zoom in/out
 
 # python interactive_viewer.py --model_path "output/dnerf/bouncingballs/" --configs arguments/dnerf/bouncingballs.py --iteration 14000
+# python interactive_viewer.py --model_path "output/dnerf/bouncingballs/" --configs arguments/dnerf/bouncingballs.py --iteration 14000 2> error.txt
+
+#!/usr/bin/env python3
+# interactive_viewer.py
 
 import argparse
 import os
@@ -19,7 +23,7 @@ import numpy as np
 import torch
 from scene import Scene
 from gaussian_renderer import render, GaussianModel
-from arguments import ModelParams, PipelineParams, get_combined_args
+from arguments import ModelParams, PipelineParams, ModelHiddenParams, get_combined_args  # Added ModelHiddenParams
 from utils.general_utils import safe_state
 from time import time
 

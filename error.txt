@@ -1,7 +1,7 @@
 Traceback (most recent call last):
-  File "interactive_viewer.py", line 219, in <module>
+  File "interactive_viewer.py", line 265, in <module>
     viewer = InteractiveViewer(args.model_path, args.iteration, args.configs)
-  File "interactive_viewer.py", line 39, in __init__
+  File "interactive_viewer.py", line 37, in __init__
     model = ModelParams(parser, sentinel=True)
   File "C:\Users\VR Beast\sources\repos\4dgs-surajrepo\4DGaussians\arguments\__init__.py", line 61, in __init__
     super().__init__(parser, "Loading Parameters", sentinel)

@@ -29,40 +29,31 @@ class InteractiveViewer:
     def __init__(self, model_path, iteration, configs_path):
         # Parse arguments
         parser = argparse.ArgumentParser(description="Interactive 4D Gaussian viewer")
-        parser.add_argument("--model_path", type=str, default=model_path)
-        parser.add_argument("--iteration", default=iteration, type=int)
-        parser.add_argument("--configs", type=str, default=configs_path)
+        # Instead of default parameters in add_argument, we'll set them differently
+        parser.add_argument("--model_path", type=str)
+        parser.add_argument("--iteration", type=int)
+        parser.add_argument("--configs", type=str)
         
         # Standard parameters from the original code
         model = ModelParams(parser, sentinel=True)
         pipeline = PipelineParams(parser)
         hyperparam = ModelHiddenParams(parser)
         
-        args = parser.parse_args([
-            "--model_path", model_path,
-            "--iteration", str(iteration),
-            "--configs", configs_path
-        ])
-        
-        if args.configs:
-            try:
-                import mmcv
-                from utils.params_utils import merge_hparams
-                config = mmcv.Config.fromfile(args.configs)
-                args = merge_hparams(args, config)
-            except ImportError:
-                print("Warning: mmcv not found. Config file will not be used.")
-            except Exception as e:
-                print(f"Error loading config file: {e}")
+        # Create a list of arguments to parse
+        argv = []
+        if model_path:
+            argv.extend(["--model_path", model_path])
+        if iteration is not None:
+            argv.extend(["--iteration", str(iteration)])
+        if configs_path:
+            argv.extend(["--configs", configs_path])
             
-        # Initialize system state
-        safe_state(quiet=True)
+        args = parser.parse_args(argv)
         
-        # Load model
+        # Store the paths and parameters
         self.model_path = model_path
-        self.iteration = args.iteration
-        self.configs = configs_path
-        
+        self.iteration = iteration
+        self.configs = configs_path      
         print(f"Loading model from {model_path}, iteration {iteration}")
         
         with torch.no_grad():

@@ -185,6 +185,10 @@ class InteractiveViewer:
                 image = np.transpose(image, (1, 2, 0))  # CHW -> HWC
                 image = np.clip(image, 0, 1)
                 image = (image * 255).astype(np.uint8)
+                # Ensure contiguous array and convert to BGR
+                image = np.ascontiguousarray(image)
+                if image.shape[2] == 3:  # Ensure 3 channels
+                    image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
                 
                 # Add frame info text
                 cv2.putText(image, f"Frame: {self.time_idx}/{self.max_time_idx}", (10, 30), 

@@ -27,14 +27,8 @@ from time import time
 
 class InteractiveViewer:
     def __init__(self, model_path, iteration, configs_path):
-        # Parse arguments
+        # Parse arguments using a single ArgumentParser
         parser = argparse.ArgumentParser(description="Interactive 4D Gaussian viewer")
-        # Instead of default parameters in add_argument, we'll set them differently
-        parser.add_argument("--model_path", type=str)
-        parser.add_argument("--iteration", type=int)
-        parser.add_argument("--configs", type=str)
-        
-        # Standard parameters from the original code
         model = ModelParams(parser, sentinel=True)
         pipeline = PipelineParams(parser)
         hyperparam = ModelHiddenParams(parser)
@@ -48,19 +42,19 @@ class InteractiveViewer:
         if configs_path:
             argv.extend(["--configs", configs_path])
             
-        args = parser.parse_args(argv)
+        args = get_combined_args(parser, argv)  # Use get_combined_args to parse arguments
         
         # Store the paths and parameters
-        self.model_path = model_path
-        self.iteration = iteration
-        self.configs = configs_path      
-        print(f"Loading model from {model_path}, iteration {iteration}")
+        self.model_path = args.model_path
+        self.iteration = args.iteration
+        self.configs = args.configs      
+        print(f"Loading model from {self.model_path}, iteration {self.iteration}")
         
         with torch.no_grad():
             try:
                 # Load Gaussian model
                 self.gaussians = GaussianModel(model.extract(args).sh_degree, hyperparam.extract(args))
-                self.scene = Scene(model.extract(args), self.gaussians, load_iteration=iteration, shuffle=False)
+                self.scene = Scene(model.extract(args), self.gaussians, load_iteration=self.iteration, shuffle=False)
                 self.cam_type = self.scene.dataset_type
                 
                 # Set background color

@@ -1,14 +1,8 @@
 Traceback (most recent call last):
-  File "interactive_viewer.py", line 263, in <module>
-    viewer = InteractiveViewer()
-  File "interactive_viewer.py", line 76, in __init__
-    self.scene = Scene(model.extract(args), self.gaussians, load_iteration=self.iteration, shuffle=False)
-  File "C:\Users\VR Beast\sources\repos\4dgs-surajrepo\4DGaussians\scene\__init__.py", line 91, in __init__
-    "iteration_" + str(self.loaded_iter),
-  File "C:\Users\VR Beast\sources\repos\4dgs-surajrepo\4DGaussians\scene\gaussian_model.py", line 236, in load_model
-    self._deformation.load_state_dict(weight_dict)
-  File "C:\Applications-Suraj\miniconda3\envs\4dgsaug25\lib\site-packages\torch\nn\modules\module.py", line 1672, in load_state_dict
-    self.__class__.__name__, "\n\t".join(error_msgs)))
-RuntimeError: Error(s) in loading state_dict for deform_network:
-	Missing key(s) in state_dict: "deformation_net.grid.grids.2.0", "deformation_net.grid.grids.2.1", "deformation_net.grid.grids.2.2", "deformation_net.grid.grids.2.3", "deformation_net.grid.grids.2.4", "deformation_net.grid.grids.2.5", "deformation_net.grid.grids.3.0", "deformation_net.grid.grids.3.1", "deformation_net.grid.grids.3.2", "deformation_net.grid.grids.3.3", "deformation_net.grid.grids.3.4", "deformation_net.grid.grids.3.5". 
-	size mismatch for deformation_net.feature_out.0.weight: copying a param with shape torch.Size([64, 64]) from checkpoint, the shape in current model is torch.Size([64, 128]).
+  File "interactive_viewer.py", line 258, in <module>
+    viewer.run()
+  File "interactive_viewer.py", line 214, in run
+    image = self.render_current_frame()
+  File "interactive_viewer.py", line 184, in render_current_frame
+    image = rendering.detach().cpu().numpy()
+KeyboardInterrupt

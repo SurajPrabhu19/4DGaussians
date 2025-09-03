@@ -1,20 +1,20 @@
 Traceback (most recent call last):
-  File "interactive_viewer.py", line 259, in <module>
-    viewer = InteractiveViewer(args.model_path, args.iteration, args.configs)
-  File "interactive_viewer.py", line 36, in __init__
-    model = ModelParams(parser, sentinel=True)
-  File "C:\Users\VR Beast\sources\repos\4dgs-surajrepo\4DGaussians\arguments\__init__.py", line 61, in __init__
-    super().__init__(parser, "Loading Parameters", sentinel)
-  File "C:\Users\VR Beast\sources\repos\4dgs-surajrepo\4DGaussians\arguments\__init__.py", line 33, in __init__
-    group.add_argument("--" + key, ("-" + key[0:1]), default=value, type=t)
-  File "C:\Applications-Suraj\miniconda3\envs\4dgsaug25\lib\argparse.py", line 1373, in add_argument
-    return self._add_action(action)
-  File "C:\Applications-Suraj\miniconda3\envs\4dgsaug25\lib\argparse.py", line 1577, in _add_action
-    action = super(_ArgumentGroup, self)._add_action(action)
-  File "C:\Applications-Suraj\miniconda3\envs\4dgsaug25\lib\argparse.py", line 1387, in _add_action
-    self._check_conflict(action)
-  File "C:\Applications-Suraj\miniconda3\envs\4dgsaug25\lib\argparse.py", line 1526, in _check_conflict
-    conflict_handler(action, confl_optionals)
-  File "C:\Applications-Suraj\miniconda3\envs\4dgsaug25\lib\argparse.py", line 1535, in _handle_conflict_error
-    raise ArgumentError(action, message % conflict_string)
-argparse.ArgumentError: argument --model_path/-m: conflicting option string: --model_path
+  File "interactive_viewer.py", line 239, in <module>
+    viewer = InteractiveViewer()
+  File "interactive_viewer.py", line 52, in __init__
+    self.scene = Scene(model.extract(args), self.gaussians, load_iteration=self.iteration, shuffle=False)
+  File "C:\Users\VR Beast\sources\repos\4dgs-surajrepo\4DGaussians\scene\__init__.py", line 91, in __init__
+    "iteration_" + str(self.loaded_iter),
+  File "C:\Users\VR Beast\sources\repos\4dgs-surajrepo\4DGaussians\scene\gaussian_model.py", line 236, in load_model
+    self._deformation.load_state_dict(weight_dict)
+  File "C:\Applications-Suraj\miniconda3\envs\4dgsaug25\lib\site-packages\torch\nn\modules\module.py", line 1672, in load_state_dict
+    self.__class__.__name__, "\n\t".join(error_msgs)))
+RuntimeError: Error(s) in loading state_dict for deform_network:
+	Missing key(s) in state_dict: "deformation_net.grid.grids.2.0", "deformation_net.grid.grids.2.1", "deformation_net.grid.grids.2.2", "deformation_net.grid.grids.2.3", "deformation_net.grid.grids.2.4", "deformation_net.grid.grids.2.5", "deformation_net.grid.grids.3.0", "deformation_net.grid.grids.3.1", "deformation_net.grid.grids.3.2", "deformation_net.grid.grids.3.3", "deformation_net.grid.grids.3.4", "deformation_net.grid.grids.3.5". 
+	size mismatch for deformation_net.grid.grids.0.2: copying a param with shape torch.Size([1, 32, 75, 64]) from checkpoint, the shape in current model is torch.Size([1, 32, 25, 64]).
+	size mismatch for deformation_net.grid.grids.0.4: copying a param with shape torch.Size([1, 32, 75, 64]) from checkpoint, the shape in current model is torch.Size([1, 32, 25, 64]).
+	size mismatch for deformation_net.grid.grids.0.5: copying a param with shape torch.Size([1, 32, 75, 64]) from checkpoint, the shape in current model is torch.Size([1, 32, 25, 64]).
+	size mismatch for deformation_net.grid.grids.1.2: copying a param with shape torch.Size([1, 32, 75, 128]) from checkpoint, the shape in current model is torch.Size([1, 32, 25, 128]).
+	size mismatch for deformation_net.grid.grids.1.4: copying a param with shape torch.Size([1, 32, 75, 128]) from checkpoint, the shape in current model is torch.Size([1, 32, 25, 128]).
+	size mismatch for deformation_net.grid.grids.1.5: copying a param with shape torch.Size([1, 32, 75, 128]) from checkpoint, the shape in current model is torch.Size([1, 32, 25, 128]).
+	size mismatch for deformation_net.feature_out.0.weight: copying a param with shape torch.Size([64, 64]) from checkpoint, the shape in current model is torch.Size([64, 128]).

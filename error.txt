@@ -1,6 +1,26 @@
-Traceback (most recent call last):
-  File "interactive_viewer.py", line 250, in <module>
-    viewer = InteractiveViewer(args.model_path, args.iteration, args.configs)
-  File "interactive_viewer.py", line 45, in __init__
-    args = get_combined_args(parser, argv)  # Use get_combined_args to parse arguments
-TypeError: get_combined_args() takes 1 positional argument but 2 were given
+usage: interactive_viewer.py [-h] [--sh_degree SH_DEGREE]
+                             [--source_path SOURCE_PATH]
+                             [--model_path MODEL_PATH] [--images IMAGES]
+                             [--resolution RESOLUTION] [--white_background]
+                             [--data_device DATA_DEVICE] [--eval]
+                             [--render_process] [--add_points]
+                             [--extension EXTENSION] [--llffhold LLFFHOLD]
+                             [--convert_SHs_python] [--compute_cov3D_python]
+                             [--debug] [--net_width NET_WIDTH]
+                             [--timebase_pe TIMEBASE_PE]
+                             [--defor_depth DEFOR_DEPTH]
+                             [--posebase_pe POSEBASE_PE]
+                             [--scale_rotation_pe SCALE_ROTATION_PE]
+                             [--opacity_pe OPACITY_PE]
+                             [--timenet_width TIMENET_WIDTH]
+                             [--timenet_output TIMENET_OUTPUT]
+                             [--bounds BOUNDS]
+                             [--plane_tv_weight PLANE_TV_WEIGHT]
+                             [--time_smoothness_weight TIME_SMOOTHNESS_WEIGHT]
+                             [--l1_time_planes L1_TIME_PLANES]
+                             [--kplanes_config KPLANES_CONFIG]
+                             [--multires MULTIRES] [--no_dx] [--no_grid]
+                             [--no_ds] [--no_dr] [--no_do] [--no_dshs]
+                             [--empty_voxel] [--grid_pe GRID_PE]
+                             [--static_mlp] [--apply_rotation]
+interactive_viewer.py: error: unrecognized arguments: --iteration 14000 --configs arguments/dnerf/bouncingballs.py

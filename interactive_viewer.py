@@ -33,16 +33,21 @@ class InteractiveViewer:
         pipeline = PipelineParams(parser)
         hyperparam = ModelHiddenParams(parser)
         
-        # Create a list of arguments to parse
-        argv = []
+        # Create a list of arguments to simulate command-line input
+        import sys
+        original_argv = sys.argv  # Save original sys.argv
+        sys.argv = [sys.argv[0]]  # Reset sys.argv to script name only
         if model_path:
-            argv.extend(["--model_path", model_path])
+            sys.argv.extend(["--model_path", model_path])
         if iteration is not None:
-            argv.extend(["--iteration", str(iteration)])
+            sys.argv.extend(["--iteration", str(iteration)])
         if configs_path:
-            argv.extend(["--configs", configs_path])
+            sys.argv.extend(["--configs", configs_path])
             
-        args = get_combined_args(parser, argv)  # Use get_combined_args to parse arguments
+        try:
+            args = get_combined_args(parser)  # Call get_combined_args with only parser
+        finally:
+            sys.argv = original_argv  # Restore original sys.argv
         
         # Store the paths and parameters
         self.model_path = args.model_path

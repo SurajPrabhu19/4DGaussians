@@ -39,17 +39,6 @@ class InteractiveViewer:
         
         args = get_combined_args(parser)  # Use get_combined_args to parse arguments
         
-        # Override ModelHiddenParams to match checkpoint
-        args.kplanes_config = {
-            'grid_dimensions': 2,
-            'input_coordinate_dim': 4,
-            'output_coordinate_dim': 32,
-            'resolution': [64, 64, 64, 75]  # Match checkpoint's temporal resolution
-        }
-        args.multires = [1, 2, 4, 8]  # Match checkpoint's grid levels (grids.0 to grids.3)
-        args.net_width = 64  # Match cfg_args, adjust if needed
-        args.defor_depth = 0  # Match cfg_args
-        
         # Store the paths and parameters
         self.model_path = args.model_path
         self.iteration = args.iteration
@@ -62,6 +51,17 @@ class InteractiveViewer:
                 exec(open(self.configs).read(), globals())
             except Exception as e:
                 print(f"Warning: Failed to load config file {self.configs}: {e}")
+        
+        # Override ModelHiddenParams to match checkpoint (after config file to ensure precedence)
+        args.kplanes_config = {
+            'grid_dimensions': 2,
+            'input_coordinate_dim': 4,
+            'output_coordinate_dim': 32,
+            'resolution': [64, 64, 64, 75]
+        }
+        args.multires = [1, 2]  # Match cfg_args and checkpoint grid levels
+        args.net_width = 64  # Match cfg_args and checkpoint feature_out shape
+        args.defor_depth = 0  # Match cfg_args to align MLP structure
         
         with torch.no_grad():
             try:

@@ -1,26 +1,20 @@
-usage: interactive_viewer.py [-h] [--sh_degree SH_DEGREE]
-                             [--source_path SOURCE_PATH]
-                             [--model_path MODEL_PATH] [--images IMAGES]
-                             [--resolution RESOLUTION] [--white_background]
-                             [--data_device DATA_DEVICE] [--eval]
-                             [--render_process] [--add_points]
-                             [--extension EXTENSION] [--llffhold LLFFHOLD]
-                             [--convert_SHs_python] [--compute_cov3D_python]
-                             [--debug] [--net_width NET_WIDTH]
-                             [--timebase_pe TIMEBASE_PE]
-                             [--defor_depth DEFOR_DEPTH]
-                             [--posebase_pe POSEBASE_PE]
-                             [--scale_rotation_pe SCALE_ROTATION_PE]
-                             [--opacity_pe OPACITY_PE]
-                             [--timenet_width TIMENET_WIDTH]
-                             [--timenet_output TIMENET_OUTPUT]
-                             [--bounds BOUNDS]
-                             [--plane_tv_weight PLANE_TV_WEIGHT]
-                             [--time_smoothness_weight TIME_SMOOTHNESS_WEIGHT]
-                             [--l1_time_planes L1_TIME_PLANES]
-                             [--kplanes_config KPLANES_CONFIG]
-                             [--multires MULTIRES] [--no_dx] [--no_grid]
-                             [--no_ds] [--no_dr] [--no_do] [--no_dshs]
-                             [--empty_voxel] [--grid_pe GRID_PE]
-                             [--static_mlp] [--apply_rotation]
-interactive_viewer.py: error: unrecognized arguments: --iteration 14000 --configs arguments/dnerf/bouncingballs.py
+Traceback (most recent call last):
+  File "interactive_viewer.py", line 259, in <module>
+    viewer = InteractiveViewer(args.model_path, args.iteration, args.configs)
+  File "interactive_viewer.py", line 36, in __init__
+    model = ModelParams(parser, sentinel=True)
+  File "C:\Users\VR Beast\sources\repos\4dgs-surajrepo\4DGaussians\arguments\__init__.py", line 61, in __init__
+    super().__init__(parser, "Loading Parameters", sentinel)
+  File "C:\Users\VR Beast\sources\repos\4dgs-surajrepo\4DGaussians\arguments\__init__.py", line 33, in __init__
+    group.add_argument("--" + key, ("-" + key[0:1]), default=value, type=t)
+  File "C:\Applications-Suraj\miniconda3\envs\4dgsaug25\lib\argparse.py", line 1373, in add_argument
+    return self._add_action(action)
+  File "C:\Applications-Suraj\miniconda3\envs\4dgsaug25\lib\argparse.py", line 1577, in _add_action
+    action = super(_ArgumentGroup, self)._add_action(action)
+  File "C:\Applications-Suraj\miniconda3\envs\4dgsaug25\lib\argparse.py", line 1387, in _add_action
+    self._check_conflict(action)
+  File "C:\Applications-Suraj\miniconda3\envs\4dgsaug25\lib\argparse.py", line 1526, in _check_conflict
+    conflict_handler(action, confl_optionals)
+  File "C:\Applications-Suraj\miniconda3\envs\4dgsaug25\lib\argparse.py", line 1535, in _handle_conflict_error
+    raise ArgumentError(action, message % conflict_string)
+argparse.ArgumentError: argument --model_path/-m: conflicting option string: --model_path

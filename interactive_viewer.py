@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 # interactive_viewer.py
 
-#This viewer provides the following keyboard controls:
-#1.	Left/Right arrow keys (or A/D): Navigate between frames in the 4D Gaussian splat
-#2.	+/- keys: Zoom in/out to explore the scene in detail
-#3.	R key: Reset the view to default
-#4.	ESC/Q: Quit the viewer
-#For mouse controls:
-#1.	Drag: Rotate the view to explore the scene from different angles
-#2.	Mouse wheel: Zoom in/out
+# This viewer provides the following keyboard controls:
+# 1. Left/Right arrow keys (or A/D): Navigate between frames in the 4D Gaussian splat
+# 2. +/- keys: Zoom in/out to explore the scene in detail
+# 3. R key: Reset the view to default
+# 4. ESC/Q: Quit the viewer
+# For mouse controls:
+# 1. Drag: Rotate the view to explore the scene from different angles
+# 2. Mouse wheel: Zoom in/out
 
 # python interactive_viewer.py --model_path "output/dnerf/bouncingballs/" --configs arguments/dnerf/bouncingballs.py --iteration 14000
 # python interactive_viewer.py --model_path "output/dnerf/bouncingballs/" --configs arguments/dnerf/bouncingballs.py --iteration 14000 2> error.txt
@@ -99,8 +99,9 @@ class InteractiveViewer:
         # Create window
         cv2.namedWindow(self.window_name, cv2.WINDOW_NORMAL)
         cv2.resizeWindow(self.window_name, 800, 800)
+        # cv2.setWindowProperty(self.window_name, cv2.WND_PROP_TOPMOST, 1)  # Force window on top
         cv2.setMouseCallback(self.window_name, self.mouse_callback)
-        
+
         # Instructions text
         self.instructions = [
             "Keys:",
@@ -114,54 +115,46 @@ class InteractiveViewer:
         ]
 
     def mouse_callback(self, event, x, y, flags, param):
+        print(f"Mouse event: {event}, x: {x}, y: {y}, flags: {flags}")  # Debug mouse events
         if event == cv2.EVENT_LBUTTONDOWN:
             self.dragging = True
             self.last_x = x
             self.last_y = y
+            print("Started dragging")
         elif event == cv2.EVENT_LBUTTONUP:
             self.dragging = False
+            print("Stopped dragging")
         elif event == cv2.EVENT_MOUSEMOVE and self.dragging:
             dx = x - self.last_x
             dy = y - self.last_y
             self.last_x = x
             self.last_y = y
-            
-            # Update rotation based on mouse movement
             self.rotation[1] += dx * 0.01  # Yaw
             self.rotation[0] += dy * 0.01  # Pitch
-        
-        # Mouse wheel event handling varies by platform
-        # This handles both Windows and Linux wheel events
+            print(f"Rotation updated: {self.rotation}")
         elif event == cv2.EVENT_MOUSEWHEEL:
-            # Windows wheel event
-            wheel_delta = flags >> 16
-            if wheel_delta > 0:
+            if flags > 0:
                 self.scale *= 1.1
+                print(f"Zoom in: {self.scale:.2f}x")
             else:
                 self.scale /= 1.1
-        elif event == 10:  # Linux mouse wheel up
-            self.scale *= 1.1
-        elif event == 11:  # Linux mouse wheel down
-            self.scale /= 1.1
+                print(f"Zoom out: {self.scale:.2f}x")
 
     def apply_view_transforms(self, view):
-        """Apply rotation and scaling transforms to the view"""
-        # Since we don't have access to the camera model implementation details,
-        # we'll implement a basic transformation that should work with most views
-        
-        # Clone the view to avoid modifying the original
         try:
-            # If view is a dict (for some camera types like PanopticSports)
             if isinstance(view, dict):
-                # Make a shallow copy since we don't modify the view for now
                 return view
-            
-            # For regular camera views
-            if hasattr(view, "world_view_transform") and hasattr(view.world_view_transform, "copy"):
-                # We're not actually modifying the transform for now since we don't know the format
-                # This is a placeholder for future implementation
-                pass
-            
+            if hasattr(view, "world_view_transform"):
+                # Apply scale (zoom) to camera's focal length or projection matrix
+                if hasattr(view, "FoVx") and hasattr(view, "FoVy"):
+                    view.FoVx *= self.scale
+                    view.FoVy *= self.scale
+                # Apply rotation (simplified, assumes world_view_transform is a 4x4 matrix)
+                if hasattr(view, "world_view_transform"):
+                    import torch
+                    from utils.graphics_utils import getRotationMatrix
+                    rot_matrix = torch.tensor(getRotationMatrix(self.rotation), dtype=torch.float32, device="cuda")
+                    view.world_view_transform = rot_matrix @ view.world_view_transform
             return view
         except Exception as e:
             print(f"Error in apply_view_transforms: {e}")
@@ -180,15 +173,20 @@ class InteractiveViewer:
                 rendering = render(view, self.gaussians, self.pipeline, self.background, cam_type=self.cam_type)["render"]
                 render_time = time() - start_time
                 
+                # Debug rendering shape
+                # print(f"Rendering shape: {rendering.shape}")
+                
                 # Convert to numpy for OpenCV
                 image = rendering.detach().cpu().numpy()
                 image = np.transpose(image, (1, 2, 0))  # CHW -> HWC
                 image = np.clip(image, 0, 1)
                 image = (image * 255).astype(np.uint8)
-                # Ensure contiguous array and convert to BGR
                 image = np.ascontiguousarray(image)
                 if image.shape[2] == 3:  # Ensure 3 channels
                     image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
+                
+                # Debug image shape
+                # print(f"Image shape: {image.shape}, dtype: {image.dtype}")
                 
                 # Add frame info text
                 cv2.putText(image, f"Frame: {self.time_idx}/{self.max_time_idx}", (10, 30), 
@@ -202,7 +200,10 @@ class InteractiveViewer:
                 for i, line in enumerate(self.instructions):
                     cv2.putText(image, line, (image.shape[1] - 300, 30 + i*25), 
                               cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
-                    
+                
+                # Save frame for debugging
+                # cv2.imwrite(f"frame_{self.time_idx}.png", image)
+                
                 return image
             except Exception as e:
                 print(f"Error rendering frame {self.time_idx}: {e}")
@@ -221,12 +222,13 @@ class InteractiveViewer:
                     # Display the rendered image
                     cv2.imshow(self.window_name, image)
                 
-                # Process keyboard input - wait for a key with timeout
-                key = cv2.waitKey(1) & 0xFF
+                # Process keyboard input - wait for a key with longer timeout
+                key = cv2.waitKey(10) & 0xFF  # Increased from 1 to 10
+                print(f"Key pressed: {key}")  # Debug key events
                 
                 if key == 27 or key == ord('q'):  # ESC or Q
+                    print("Exiting viewer")
                     break
-                # Handle more key codes for arrow keys for cross-platform compatibility
                 elif key in [83, 100, ord('d')]:  # Right arrow, numpad right, or 'd'
                     self.time_idx = min(self.time_idx + 1, self.max_time_idx)
                     print(f"Frame: {self.time_idx}/{self.max_time_idx}")
@@ -235,23 +237,18 @@ class InteractiveViewer:
                     print(f"Frame: {self.time_idx}/{self.max_time_idx}")
                 elif key == ord('+') or key == ord('='):  # Zoom in
                     self.scale *= 1.1
-                    print(f"Zoom: {self.scale:.2f}x")
+                    print(f"Zoom in: {self.scale:.2f}x")
                 elif key == ord('-') or key == ord('_'):  # Zoom out
                     self.scale /= 1.1
-                    print(f"Zoom: {self.scale:.2f}x")
+                    print(f"Zoom out: {self.scale:.2f}x")
                 elif key == ord('r'):  # Reset view
                     self.scale = 1.0
                     self.rotation = np.array([0, 0, 0], dtype=np.float32)
                     self.translation = np.array([0, 0, 0], dtype=np.float32)
                     print("View reset")
                 
-                # Debug the key code to help diagnose issues
-                if key not in [255, -1, 0]:  # Exclude "no key pressed" values
-                    print(f"Key pressed: {key}")
-            
             except Exception as e:
                 print(f"Error in main loop: {e}")
-                # Continue instead of breaking to make the viewer more robust
                 continue
         
         cv2.destroyAllWindows()

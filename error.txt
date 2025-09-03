@@ -1,8 +1,179 @@
-Traceback (most recent call last):
-  File "interactive_viewer.py", line 258, in <module>
-    viewer.run()
-  File "interactive_viewer.py", line 214, in run
-    image = self.render_current_frame()
-  File "interactive_viewer.py", line 184, in render_current_frame
-    image = rendering.detach().cpu().numpy()
-KeyboardInterrupt
+ion 410000 2> error.txt
+
+(4dgsaug25) C:\Users\VR Beast\sources\repos\4dgs-surajrepo\4DGaussians>python interactive_viewer.py --model_path "output/dnerf/bouncingballs/" --configs arguments/dnerf/bouncingballs.py --iteration 20000 2> error.txt
+Looking for config file in output/dnerf/bouncingballs/cfg_args
+Config file found: output/dnerf/bouncingballs/cfg_args
+Loading model from output/dnerf/bouncingballs/, iteration 20000
+feature_dim: 64
+Loading trained model at iteration 20000
+Found transforms_train.json file, assuming Blender data set!
+Reading Training Transforms
+Reading Test Transforms
+Generating Video Transforms
+hello!!!!
+Generating random point cloud (2000)...
+Loading Training Cameras
+Loading Test Cameras
+Loading Video Cameras
+Deformation Net Set aabb [1.29918384 1.29998514 1.29788465] [-1.29939838 -1.29886517 -1.29719676]
+Voxel Plane: set aabb= Parameter containing:
+tensor([[ 1.2992,  1.3000,  1.2979],
+        [-1.2994, -1.2989, -1.2972]])
+loading model from existsoutput/dnerf/bouncingballs/point_cloud\iteration_20000
+Starting interactive viewer. Press 'Q' or 'ESC' to exit.
+
+(4dgsaug25) C:\Users\VR Beast\sources\repos\4dgs-surajrepo\4DGaussians>python interactive_viewer.py --model_path "output/dnerf/bouncingballs/" --configs arguments/dnerf/bouncingballs.py --iteration 20000 2> error.txt
+Looking for config file in output/dnerf/bouncingballs/cfg_args
+Config file found: output/dnerf/bouncingballs/cfg_args
+Loading model from output/dnerf/bouncingballs/, iteration 20000
+feature_dim: 64
+Loading trained model at iteration 20000
+Found transforms_train.json file, assuming Blender data set!
+Reading Training Transforms
+Reading Test Transforms
+Generating Video Transforms
+hello!!!!
+Generating random point cloud (2000)...
+Loading Training Cameras
+Loading Test Cameras
+Loading Video Cameras
+Deformation Net Set aabb [1.29654414 1.29770263 1.29984904] [-1.29931703 -1.29788779 -1.29941159]
+Voxel Plane: set aabb= Parameter containing:
+tensor([[ 1.2965,  1.2977,  1.2998],
+        [-1.2993, -1.2979, -1.2994]])
+loading model from existsoutput/dnerf/bouncingballs/point_cloud\iteration_20000
+Starting interactive viewer. Press 'Q' or 'ESC' to exit.
+Error rendering frame 0: OpenCV(4.12.0) :-1: error: (-5:Bad argument) in function 'putText'
+> Overload resolution failed:
+>  - Layout of the output array img is incompatible with cv::Mat
+>  - Expected Ptr<cv::UMat> for argument 'img'
+
+Error rendering frame 0: OpenCV(4.12.0) :-1: error: (-5:Bad argument) in function 'putText'
+> Overload resolution failed:
+>  - Layout of the output array img is incompatible with cv::Mat
+>  - Expected Ptr<cv::UMat> for argument 'img'
+
+Error rendering frame 0: OpenCV(4.12.0) :-1: error: (-5:Bad argument) in function 'putText'
+> Overload resolution failed:
+>  - Layout of the output array img is incompatible with cv::Mat
+>  - Expected Ptr<cv::UMat> for argument 'img'
+
+Error rendering frame 0: OpenCV(4.12.0) :-1: error: (-5:Bad argument) in function 'putText'
+> Overload resolution failed:
+>  - Layout of the output array img is incompatible with cv::Mat
+>  - Expected Ptr<cv::UMat> for argument 'img'
+
+Error rendering frame 0: OpenCV(4.12.0) :-1: error: (-5:Bad argument) in function 'putText'
+> Overload resolution failed:
+>  - Layout of the output array img is incompatible with cv::Mat
+>  - Expected Ptr<cv::UMat> for argument 'img'
+
+Error rendering frame 0: OpenCV(4.12.0) :-1: error: (-5:Bad argument) in function 'putText'
+> Overload resolution failed:
+>  - Layout of the output array img is incompatible with cv::Mat
+>  - Expected Ptr<cv::UMat> for argument 'img'
+
+Error rendering frame 0: OpenCV(4.12.0) :-1: error: (-5:Bad argument) in function 'putText'
+> Overload resolution failed:
+>  - Layout of the output array img is incompatible with cv::Mat
+>  - Expected Ptr<cv::UMat> for argument 'img'
+
+Error rendering frame 0: OpenCV(4.12.0) :-1: error: (-5:Bad argument) in function 'putText'
+> Overload resolution failed:
+>  - Layout of the output array img is incompatible with cv::Mat
+>  - Expected Ptr<cv::UMat> for argument 'img'
+
+Error rendering frame 0: OpenCV(4.12.0) :-1: error: (-5:Bad argument) in function 'putText'
+> Overload resolution failed:
+>  - Layout of the output array img is incompatible with cv::Mat
+>  - Expected Ptr<cv::UMat> for argument 'img'
+
+Error rendering frame 0: OpenCV(4.12.0) :-1: error: (-5:Bad argument) in function 'putText'
+> Overload resolution failed:
+>  - Layout of the output array img is incompatible with cv::Mat
+>  - Expected Ptr<cv::UMat> for argument 'img'
+
+Error rendering frame 0: OpenCV(4.12.0) :-1: error: (-5:Bad argument) in function 'putText'
+> Overload resolution failed:
+>  - Layout of the output array img is incompatible with cv::Mat
+>  - Expected Ptr<cv::UMat> for argument 'img'
+
+Error rendering frame 0: OpenCV(4.12.0) :-1: error: (-5:Bad argument) in function 'putText'
+> Overload resolution failed:
+>  - Layout of the output array img is incompatible with cv::Mat
+>  - Expected Ptr<cv::UMat> for argument 'img'
+
+Error rendering frame 0: OpenCV(4.12.0) :-1: error: (-5:Bad argument) in function 'putText'
+> Overload resolution failed:
+>  - Layout of the output array img is incompatible with cv::Mat
+>  - Expected Ptr<cv::UMat> for argument 'img'
+
+Error rendering frame 0: OpenCV(4.12.0) :-1: error: (-5:Bad argument) in function 'putText'
+> Overload resolution failed:
+>  - Layout of the output array img is incompatible with cv::Mat
+>  - Expected Ptr<cv::UMat> for argument 'img'
+
+Error rendering frame 0: OpenCV(4.12.0) :-1: error: (-5:Bad argument) in function 'putText'
+> Overload resolution failed:
+>  - Layout of the output array img is incompatible with cv::Mat
+>  - Expected Ptr<cv::UMat> for argument 'img'
+
+Error rendering frame 0: OpenCV(4.12.0) :-1: error: (-5:Bad argument) in function 'putText'
+> Overload resolution failed:
+>  - Layout of the output array img is incompatible with cv::Mat
+>  - Expected Ptr<cv::UMat> for argument 'img'
+
+Error rendering frame 0: OpenCV(4.12.0) :-1: error: (-5:Bad argument) in function 'putText'
+> Overload resolution failed:
+>  - Layout of the output array img is incompatible with cv::Mat
+>  - Expected Ptr<cv::UMat> for argument 'img'
+
+Error rendering frame 0: OpenCV(4.12.0) :-1: error: (-5:Bad argument) in function 'putText'
+> Overload resolution failed:
+>  - Layout of the output array img is incompatible with cv::Mat
+>  - Expected Ptr<cv::UMat> for argument 'img'
+
+Error rendering frame 0: OpenCV(4.12.0) :-1: error: (-5:Bad argument) in function 'putText'
+> Overload resolution failed:
+>  - Layout of the output array img is incompatible with cv::Mat
+>  - Expected Ptr<cv::UMat> for argument 'img'
+
+Error rendering frame 0: OpenCV(4.12.0) :-1: error: (-5:Bad argument) in function 'putText'
+> Overload resolution failed:
+>  - Layout of the output array img is incompatible with cv::Mat
+>  - Expected Ptr<cv::UMat> for argument 'img'
+
+Error rendering frame 0: OpenCV(4.12.0) :-1: error: (-5:Bad argument) in function 'putText'
+> Overload resolution failed:
+>  - Layout of the output array img is incompatible with cv::Mat
+>  - Expected Ptr<cv::UMat> for argument 'img'
+
+Error rendering frame 0: OpenCV(4.12.0) :-1: error: (-5:Bad argument) in function 'putText'
+> Overload resolution failed:
+>  - Layout of the output array img is incompatible with cv::Mat
+>  - Expected Ptr<cv::UMat> for argument 'img'
+
+Error rendering frame 0: OpenCV(4.12.0) :-1: error: (-5:Bad argument) in function 'putText'
+> Overload resolution failed:
+>  - Layout of the output array img is incompatible with cv::Mat
+>  - Expected Ptr<cv::UMat> for argument 'img'
+
+Error rendering frame 0: OpenCV(4.12.0) :-1: error: (-5:Bad argument) in function 'putText'
+> Overload resolution failed:
+>  - Layout of the output array img is incompatible with cv::Mat
+>  - Expected Ptr<cv::UMat> for argument 'img'
+
+Error rendering frame 0: OpenCV(4.12.0) :-1: error: (-5:Bad argument) in function 'putText'
+> Overload resolution failed:
+>  - Layout of the output array img is incompatible with cv::Mat
+>  - Expected Ptr<cv::UMat> for argument 'img'
+
+Error rendering frame 0: OpenCV(4.12.0) :-1: error: (-5:Bad argument) in function 'putText'
+> Overload resolution failed:
+>  - Layout of the output array img is incompatible with cv::Mat
+>  - Expected Ptr<cv::UMat> for argument 'img'
+
+Error rendering frame 0: OpenCV(4.12.0) :-1: error: (-5:Bad argument) in function 'putText'
+> Overload resolution failed:
+>  - Layout of the output array img is incompatible with cv::Mat
+>  - Expected Ptr<cv::UMat> for argument 'img'

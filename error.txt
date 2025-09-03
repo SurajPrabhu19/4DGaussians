@@ -1,20 +1,6 @@
 Traceback (most recent call last):
-  File "interactive_viewer.py", line 265, in <module>
+  File "interactive_viewer.py", line 250, in <module>
     viewer = InteractiveViewer(args.model_path, args.iteration, args.configs)
-  File "interactive_viewer.py", line 37, in __init__
-    model = ModelParams(parser, sentinel=True)
-  File "C:\Users\VR Beast\sources\repos\4dgs-surajrepo\4DGaussians\arguments\__init__.py", line 61, in __init__
-    super().__init__(parser, "Loading Parameters", sentinel)
-  File "C:\Users\VR Beast\sources\repos\4dgs-surajrepo\4DGaussians\arguments\__init__.py", line 33, in __init__
-    group.add_argument("--" + key, ("-" + key[0:1]), default=value, type=t)
-  File "C:\Applications-Suraj\miniconda3\envs\4dgsaug25\lib\argparse.py", line 1373, in add_argument
-    return self._add_action(action)
-  File "C:\Applications-Suraj\miniconda3\envs\4dgsaug25\lib\argparse.py", line 1577, in _add_action
-    action = super(_ArgumentGroup, self)._add_action(action)
-  File "C:\Applications-Suraj\miniconda3\envs\4dgsaug25\lib\argparse.py", line 1387, in _add_action
-    self._check_conflict(action)
-  File "C:\Applications-Suraj\miniconda3\envs\4dgsaug25\lib\argparse.py", line 1526, in _check_conflict
-    conflict_handler(action, confl_optionals)
-  File "C:\Applications-Suraj\miniconda3\envs\4dgsaug25\lib\argparse.py", line 1535, in _handle_conflict_error
-    raise ArgumentError(action, message % conflict_string)
-argparse.ArgumentError: argument --model_path/-m: conflicting option string: --model_path
+  File "interactive_viewer.py", line 45, in __init__
+    args = get_combined_args(parser, argv)  # Use get_combined_args to parse arguments
+TypeError: get_combined_args() takes 1 positional argument but 2 were given

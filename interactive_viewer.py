@@ -26,33 +26,23 @@ from utils.general_utils import safe_state
 from time import time
 
 class InteractiveViewer:
-    def __init__(self, model_path, iteration, configs_path):
+    def __init__(self):
         # Parse arguments using a single ArgumentParser
         parser = argparse.ArgumentParser(description="Interactive 4D Gaussian viewer")
         model = ModelParams(parser, sentinel=True)
         pipeline = PipelineParams(parser)
         hyperparam = ModelHiddenParams(parser)
         
-        # Create a list of arguments to simulate command-line input
-        import sys
-        original_argv = sys.argv  # Save original sys.argv
-        sys.argv = [sys.argv[0]]  # Reset sys.argv to script name only
-        if model_path:
-            sys.argv.extend(["--model_path", model_path])
-        if iteration is not None:
-            sys.argv.extend(["--iteration", str(iteration)])
-        if configs_path:
-            sys.argv.extend(["--configs", configs_path])
-            
-        try:
-            args = get_combined_args(parser)  # Call get_combined_args with only parser
-        finally:
-            sys.argv = original_argv  # Restore original sys.argv
+        # Add missing arguments for command-line compatibility
+        parser.add_argument("--iteration", default=-1, type=int, help="Iteration to load")
+        parser.add_argument("--configs", type=str, help="Path to config file")
+        
+        args = get_combined_args(parser)  # Use get_combined_args to parse arguments
         
         # Store the paths and parameters
         self.model_path = args.model_path
         self.iteration = args.iteration
-        self.configs = args.configs      
+        self.configs = args.configs if hasattr(args, 'configs') else None      
         print(f"Loading model from {self.model_path}, iteration {self.iteration}")
         
         with torch.no_grad():
@@ -245,14 +235,8 @@ class InteractiveViewer:
         cv2.destroyAllWindows()
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Interactive 4D Gaussian viewer")
-    parser.add_argument("--model_path", required=True, type=str, help="Path to model directory")
-    parser.add_argument("--iteration", default=-1, type=int, help="Iteration to load")
-    parser.add_argument("--configs", required=True, type=str, help="Path to config file")
-    
     try:
-        args = parser.parse_args()
-        viewer = InteractiveViewer(args.model_path, args.iteration, args.configs)
+        viewer = InteractiveViewer()
         viewer.run()
     except Exception as e:
         print(f"Error: {e}")

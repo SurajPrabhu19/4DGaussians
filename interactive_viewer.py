@@ -39,6 +39,16 @@ class InteractiveViewer:
         
         args = get_combined_args(parser)  # Use get_combined_args to parse arguments
         
+        # Override ModelHiddenParams to match checkpoint
+        hyperparam.kplanes_config = {
+            'grid_dimensions': 2,
+            'input_coordinate_dim': 4,
+            'output_coordinate_dim': 32,
+            'resolution': [64, 64, 64, 75]  # Match temporal resolution of 75
+        }
+        hyperparam.multires = [1, 2, 4, 8, 16]  # Add more resolutions to match grids.2.* and grids.3.*
+        hyperparam.net_width = 32  # Adjust to match feature_out.0.weight shape
+        
         # Store the paths and parameters
         self.model_path = args.model_path
         self.iteration = args.iteration
@@ -47,8 +57,9 @@ class InteractiveViewer:
         
         with torch.no_grad():
             try:
-                # Load Gaussian model
+                # Load Gaussian model with overridden parameters
                 self.gaussians = GaussianModel(model.extract(args).sh_degree, hyperparam.extract(args))
+                # self.gaussians._deformation.load_state_dict(torch.load(os.path.join(self.model_path, "point_cloud", f"iteration_{self.iteration}", "deformation.pth")), strict=False)
                 self.scene = Scene(model.extract(args), self.gaussians, load_iteration=self.iteration, shuffle=False)
                 self.cam_type = self.scene.dataset_type
                 

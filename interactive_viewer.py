@@ -40,14 +40,15 @@ class InteractiveViewer:
         args = get_combined_args(parser)  # Use get_combined_args to parse arguments
         
         # Override ModelHiddenParams to match checkpoint
-        hyperparam.kplanes_config = {
+        args.kplanes_config = {
             'grid_dimensions': 2,
             'input_coordinate_dim': 4,
             'output_coordinate_dim': 32,
-            'resolution': [64, 64, 64, 75]  # Match temporal resolution of 75
+            'resolution': [64, 64, 64, 75]  # Match checkpoint's temporal resolution
         }
-        hyperparam.multires = [1, 2, 4, 8, 16]  # Add more resolutions to match grids.2.* and grids.3.*
-        hyperparam.net_width = 32  # Adjust to match feature_out.0.weight shape
+        args.multires = [1, 2, 4, 8]  # Match checkpoint's grid levels (grids.0 to grids.3)
+        args.net_width = 64  # Match cfg_args, adjust if needed
+        args.defor_depth = 0  # Match cfg_args
         
         # Store the paths and parameters
         self.model_path = args.model_path
@@ -55,11 +56,17 @@ class InteractiveViewer:
         self.configs = args.configs if hasattr(args, 'configs') else None      
         print(f"Loading model from {self.model_path}, iteration {self.iteration}")
         
+        # Load config file if provided
+        if self.configs:
+            try:
+                exec(open(self.configs).read(), globals())
+            except Exception as e:
+                print(f"Warning: Failed to load config file {self.configs}: {e}")
+        
         with torch.no_grad():
             try:
                 # Load Gaussian model with overridden parameters
                 self.gaussians = GaussianModel(model.extract(args).sh_degree, hyperparam.extract(args))
-                # self.gaussians._deformation.load_state_dict(torch.load(os.path.join(self.model_path, "point_cloud", f"iteration_{self.iteration}", "deformation.pth")), strict=False)
                 self.scene = Scene(model.extract(args), self.gaussians, load_iteration=self.iteration, shuffle=False)
                 self.cam_type = self.scene.dataset_type
                 

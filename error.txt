@@ -1,6 +1,0 @@
-Traceback (most recent call last):
-  File "interactive_viewer.py", line 251, in <module>
-    viewer.run()
-  File "interactive_viewer.py", line 218, in run
-    key = cv2.waitKey(10) & 0xFF  # Increased from 1 to 10
-KeyboardInterrupt

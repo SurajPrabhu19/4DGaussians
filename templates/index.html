@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>4D Gaussian Viewer</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/three@0.152.0/build/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.152.0/examples/js/controls/OrbitControls.js"></script>
+    <script src="/static/js/gaussian-splat-3d.js"></script>
+</head>
+<body>
+    <div class="container">
+        <div class="viewer-container">
+            <div id="canvas-container"></div>
+            
+            <div class="controls">
+                <div class="timeline">
+                    <button id="play-btn">Play</button>
+                    <input type="range" id="time-slider" min="0" max="100" value="0">
+                    <span id="time-display">0 / 0</span>
+                </div>
+                
+                <div class="camera-controls">
+                    <button id="reset-view">Reset View</button>
+                    <div class="camera-presets">
+                        <button data-preset="front">Front</button>
+                        <button data-preset="side">Side</button>
+                        <button data-preset="top">Top</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="sidebar">
+            <h2>4D Gaussian Viewer</h2>
+            <div class="section">
+                <h3>Model</h3>
+                <select id="model-select">
+                    <option value="">Select a model</option>
+                </select>
+            </div>
+            
+            <div class="section">
+                <h3>Quality</h3>
+                <label>
+                    <input type="radio" name="quality" value="high" checked> High
+                </label>
+                <label>
+                    <input type="radio" name="quality" value="medium"> Medium
+                </label>
+                <label>
+                    <input type="radio" name="quality" value="low"> Low
+                </label>
+            </div>
+            
+            <div class="section">
+                <h3>Audio</h3>
+                <label>
+                    <input type="checkbox" id="spatial-audio" checked> Spatial Audio
+                </label>
+                <div>
+                    <label for="volume">Volume</label>
+                    <input type="range" id="volume" min="0" max="1" step="0.1" value="0.5">
+                </div>
+            </div>
+            
+            <div class="section">
+                <h3>View Options</h3>
+                <label>
+                    <input type="checkbox" id="show-points" checked> Show Points
+                </label>
+                <label>
+                    <input type="checkbox" id="show-background" checked> Background
+                </label>
+            </div>
+            
+            <div class="section">
+                <h3>Export</h3>
+                <button id="export-video">Export Video</button>
+                <button id="export-snapshot">Take Snapshot</button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="loading-screen">
+        <div class="loading-content">
+            <h2>Loading Model...</h2>
+            <div class="progress-bar">
+                <div class="progress"></div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="/static/js/viewer.js"></script>
+</body>
+</html>

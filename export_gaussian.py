@@ -2,24 +2,22 @@ import os
 import torch
 import numpy as np
 from scene import GaussianModel
-from arguments import ModelParams, PipelineParams
+from arguments import ModelParams, PipelineParams, get_combined_args
 import plyfile
 import argparse
 
-def export_gaussian_model(model_path, iteration=30000):
+def export_gaussian_model(model_path, iteration=20000):
     # Set up argument parser
     parser = argparse.ArgumentParser(description="Export Gaussian model to PLY")
-    # Manually add required arguments based on typical 4DGaussians setup
-    parser.add_argument('-s', '--source_path', type=str, default='data/dnerf/bouncingballs', help='Path to dataset')
-    parser.add_argument('--model_path', type=str, default=model_path, help='Path to model output')
-    parser.add_argument('--sh_degree', type=int, default=3, help='Spherical harmonics degree')
-    parser.add_argument('--iterations', type=int, default=30000, help='Number of training iterations')
-    # Add other arguments as needed; check arguments.py for full list
-    args = parser.parse_args(['-s', 'data/dnerf/bouncingballs', '--model_path', model_path])
+    # Initialize parameter groups with the parser
+    model_params = ModelParams(parser)
+    pipeline_params = PipelineParams(parser)
+    # Parse arguments, merging with cfg_args if available
+    args = get_combined_args(parser)
 
-    # Load model parameters
-    dataset = ModelParams().parse_args(args)
-    pipeline = PipelineParams().parse_args(args)
+    # Extract parameters
+    dataset = model_params.extract(args)
+    pipeline = pipeline_params.extract(args)
     gaussian_model = GaussianModel(dataset.sh_degree)
     ply_path = os.path.join(model_path, f"point_cloud/iteration_{iteration}/point_cloud.ply")
     

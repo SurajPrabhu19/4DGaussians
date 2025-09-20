@@ -67,8 +67,17 @@ def export_gaussian_model(model_path, iteration=20000):
         deformation = np.zeros_like(gaussian_model.get_xyz.detach().cpu().numpy())
     else:
         deformation_table = torch.load(deformation_path, map_location='cpu')
-        # Adjust based on actual deformation structure; assuming 'deformation' key
-        deformation = deformation_table.get('deformation', torch.zeros_like(gaussian_model.get_xyz)).detach().cpu().numpy()
+        print(f"deformation_table shape: {deformation_table.shape}")
+        # Handle tensor directly; assume shape [N, 3, T] or [N, 3]
+        if deformation_table.ndim == 3:
+            # Select first time step for single PLY export
+            deformation = deformation_table[:, :, 0].detach().cpu().numpy()
+        elif deformation_table.ndim == 2:
+            # Use directly if no time dimension
+            deformation = deformation_table.detach().cpu().numpy()
+        else:
+            print(f"Warning: Unexpected deformation_table shape {deformation_table.shape}. Using zero deformations.")
+            deformation = np.zeros_like(gaussian_model.get_xyz.detach().cpu().numpy())
 
     # Extract Gaussian attributes
     xyz = gaussian_model.get_xyz.detach().cpu().numpy()  # 3D positions
@@ -102,4 +111,3 @@ def export_gaussian_model(model_path, iteration=20000):
 if __name__ == "__main__":
     model_path = "output/dnerf/bouncingballs"  # Your experiment path
     export_gaussian_model(model_path, iteration=20000)
-

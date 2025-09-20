@@ -1,3 +1,5 @@
+#command used: python export_gaussian.py --model_path output/dnerf/bouncingballs --source_path data/dnerf/bouncingballs --sh_degree 3 --images images --white_background --resolution 512
+
 import os
 import torch
 import numpy as np
@@ -59,21 +61,21 @@ def export_gaussian_model(model_path, iteration=20000):
     gaussian_model.load_ply(ply_path)
 
     # Load deformation data (time-varying)
-    deformation_path = os.path.join(model_path, f"point_cloud/iteration_{iteration}/deformation.pth")
+    deformation_path = os.path.join(model_path, f"point_cloud/iteration_{iteration}/deformation_table.pth")
     if not os.path.exists(deformation_path):
         print(f"Warning: Deformation file not found at {deformation_path}. Using zero deformations.")
-        deformation = np.zeros_like(gaussian_model.get_xyz.cpu().numpy())
+        deformation = np.zeros_like(gaussian_model.get_xyz.detach().cpu().numpy())
     else:
         deformation_table = torch.load(deformation_path, map_location='cpu')
         # Adjust based on actual deformation structure; assuming 'deformation' key
-        deformation = deformation_table.get('deformation', torch.zeros_like(gaussian_model.get_xyz)).cpu().numpy()
+        deformation = deformation_table.get('deformation', torch.zeros_like(gaussian_model.get_xyz)).detach().cpu().numpy()
 
     # Extract Gaussian attributes
-    xyz = gaussian_model.get_xyz.cpu().numpy()  # 3D positions
-    colors = gaussian_model.get_features.cpu().numpy()[:, :3]  # RGB or first 3 SH coefficients
-    opacity = gaussian_model.get_opacity.cpu().numpy()  # Alpha values
-    scale = gaussian_model.get_scaling.cpu().numpy()  # Scale per axis
-    rotation = gaussian_model.get_rotation.cpu().numpy()  # Quaternion rotations
+    xyz = gaussian_model.get_xyz.detach().cpu().numpy()  # 3D positions
+    colors = gaussian_model.get_features.detach().cpu().numpy()[:, :3]  # RGB or first 3 SH coefficients
+    opacity = gaussian_model.get_opacity.detach().cpu().numpy()  # Alpha values
+    scale = gaussian_model.get_scaling.detach().cpu().numpy()  # Scale per axis
+    rotation = gaussian_model.get_rotation.detach().cpu().numpy()  # Quaternion rotations
 
     # Combine with deformation (time-varying offsets)
     vertex_data = np.zeros(len(xyz), dtype=[
@@ -100,3 +102,4 @@ def export_gaussian_model(model_path, iteration=20000):
 if __name__ == "__main__":
     model_path = "output/dnerf/bouncingballs"  # Your experiment path
     export_gaussian_model(model_path, iteration=20000)
+

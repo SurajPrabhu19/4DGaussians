@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>4D Gaussian Splatting Viewer</title>
+    <style>
+        body { margin: 0; overflow: hidden; }
+        canvas { display: block; }
+        #timeSlider { position: absolute; bottom: 20px; left: 20px; width: 200px; }
+        #timeLabel { position: absolute; bottom: 40px; left: 20px; color: white; font-family: Arial; }
+    </style>
+</head>
+<body>
+    <input type="range" id="timeSlider" min="0" max="1" step="0.013333" value="0">
+    <div id="timeLabel">Time: 0.00</div>
+    <audio id="audio" src="bouncingballs_audio.mp3"></audio>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.134.0/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.134.0/examples/js/loaders/PLYLoader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.134.0/examples/js/controls/VRButton.js"></script>
+    <script>
+        // Scene setup
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.set(0, 0, 5);
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.xr.enabled = true;
+        document.body.appendChild(renderer.domElement);
+
+        // Orbit controls
+        const controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.05;
+
+        // VR button
+        document.body.appendChild(THREE.VRButton.createButton(renderer));
+
+        // Gaussian splatting shader
+        const vertexShader = `
+            attribute vec3 center;
+            attribute vec3 color;
+            attribute float opacity;
+            attribute vec3 scale;
+            attribute vec4 rotation;
+            attribute vec3 deform;
+            uniform float time;
+            varying vec3 vColor;
+            varying float vOpacity;
+            void main() {
+                // Apply quaternion rotation
+                vec3 p = position;
+                vec3 q = rotation.xyz;
+                float w = rotation.w;
+                vec3 rotated = p + 2.0 * cross(q, cross(q, p) + w * p);
+                // Apply scale and deformation
+                vec3 scaled = rotated * scale;
+                vec3 deformed = scaled + deform * time;
+                vec4 mvPosition = modelViewMatrix * vec4(center + deformed, 1.0);
+                gl_Position = projectionMatrix * mvPosition;
+                gl_PointSize = 5.0 * (1.0 / -mvPosition.z);
+                vColor = color;
+                vOpacity = opacity;
+            }
+        `;
+        const fragmentShader = `
+            varying vec3 vColor;
+            varying float vOpacity;
+            void main() {
+                vec2 cxy = 2.0 * gl_PointCoord - 1.0;
+                float r = dot(cxy, cxy);
+                if (r > 1.0) discard;
+                float alpha = vOpacity * exp(-r * 2.0); // Gaussian falloff
+                gl_FragColor = vec4(vColor, alpha);
+            }
+        `;
+
+        // Load PLY
+        const loader = new THREE.PLYLoader();
+        loader.load('exported_gaussian.ply', (geometry) => {
+            geometry.computeBoundingSphere();
+            const center = geometry.boundingSphere.center;
+            camera.position.set(center.x, center.y, center.z + 5);
+            controls.target.set(center.x, center.y, center.z);
+
+            const material = new THREE.ShaderMaterial({
+                vertexShader,
+                fragmentShader,
+                transparent: true,
+                depthWrite: false,
+                blending: THREE.AdditiveBlending
+            });
+
+            // Map PLY attributes to shader attributes
+            geometry.attributes.color = geometry.attributes.r ? new THREE.BufferAttribute(
+                new Float32Array(geometry.attributes.r.array.length * 3).map((_, i) => [
+                    geometry.attributes.r.array[i / 3],
+                    geometry.attributes.g.array[i / 3],
+                    geometry.attributes.b.array[i / 3]
+                ][i % 3]), 3) : geometry.attributes.color;
+
+            geometry.attributes.center = geometry.attributes.position;
+            if (!geometry.attributes.scale_x) {
+                const count = geometry.attributes.position.count;
+                geometry.attributes.scale_x = new THREE.BufferAttribute(new Float32Array(count).fill(0.1), 1);
+                geometry.attributes.scale_y = new THREE.BufferAttribute(new Float32Array(count).fill(0.1), 1);
+                geometry.attributes.scale_z = new THREE.BufferAttribute(new Float32Array(count).fill(0.1), 1);
+                geometry.attributes.rot_0 = new THREE.BufferAttribute(new Float32Array(count).fill(1.0), 1);
+                geometry.attributes.rot_1 = new THREE.BufferAttribute(new Float32Array(count).fill(0.0), 1);
+                geometry.attributes.rot_2 = new THREE.BufferAttribute(new Float32Array(count).fill(0.0), 1);
+                geometry.attributes.rot_3 = new THREE.BufferAttribute(new Float32Array(count).fill(0.0), 1);
+                geometry.attributes.deform_x = new THREE.BufferAttribute(new Float32Array(count).fill(0.0), 1);
+                geometry.attributes.deform_y = new THREE.BufferAttribute(new Float32Array(count).fill(0.0), 1);
+                geometry.attributes.deform_z = new THREE.BufferAttribute(new Float32Array(count).fill(0.0), 1);
+                geometry.attributes.opacity = new THREE.BufferAttribute(new Float32Array(count).fill(1.0), 1);
+            }
+            geometry.attributes.scale = new THREE.BufferAttribute(
+                new Float32Array(geometry.attributes.scale_x.array.length * 3).map((_, i) => [
+                    geometry.attributes.scale_x.array[i / 3],
+                    geometry.attributes.scale_y.array[i / 3],
+                    geometry.attributes.scale_z.array[i / 3]
+                ][i % 3]), 3);
+            geometry.attributes.rotation = new THREE.BufferAttribute(
+                new Float32Array(geometry.attributes.rot_0.array.length * 4).map((_, i) => [
+                    geometry.attributes.rot_0.array[i / 4],
+                    geometry.attributes.rot_1.array[i / 4],
+                    geometry.attributes.rot_2.array[i / 4],
+                    geometry.attributes.rot_3.array[i / 4]
+                ][i % 4]), 4);
+            geometry.attributes.deform = new THREE.BufferAttribute(
+                new Float32Array(geometry.attributes.deform_x.array.length * 3).map((_, i) => [
+                    geometry.attributes.deform_x.array[i / 3],
+                    geometry.attributes.deform_y.array[i / 3],
+                    geometry.attributes.deform_z.array[i / 3]
+                ][i % 3]), 3);
+
+            const points = new THREE.Points(geometry, material);
+            scene.add(points);
+
+            // Time slider
+            const timeSlider = document.getElementById('timeSlider');
+            const timeLabel = document.getElementById('timeLabel');
+            const audio = document.getElementById('audio');
+            timeSlider.addEventListener('input', () => {
+                const time = parseFloat(timeSlider.value);
+                material.uniforms.time.value = time;
+                timeLabel.textContent = `Time: ${time.toFixed(2)}`;
+                if (audio) {
+                    audio.currentTime = time * audio.duration;
+                    if (!audio.paused) audio.play();
+                }
+            });
+            material.uniforms = { time: { value: 0 } };
+        });
+
+        // Animation loop
+        function animate() {
+            renderer.setAnimationLoop(() => {
+                controls.update();
+                renderer.render(scene, camera);
+            });
+        }
+        animate();
+
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+    </script>
+</body>
+</html>

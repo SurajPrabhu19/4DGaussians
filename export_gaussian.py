@@ -7,13 +7,29 @@ import plyfile
 import argparse
 
 def export_gaussian_model(model_path, iteration=20000):
+    # Ensure model_path is absolute
+    model_path = os.path.abspath(model_path)
+    
     # Set up argument parser
     parser = argparse.ArgumentParser(description="Export Gaussian model to PLY")
     # Initialize parameter groups with the parser
     model_params = ModelParams(parser)
     pipeline_params = PipelineParams(parser)
-    # Parse arguments, merging with cfg_args if available
-    args = get_combined_args(parser)
+    
+    # Provide default arguments to avoid cfg_args dependency
+    args_list = [
+        '-s', 'data/dnerf/bouncingballs',
+        '--model_path', model_path,
+        '--sh_degree', '3'
+    ]
+    args = parser.parse_args(args_list)
+
+    # Try to merge with cfg_args if available
+    try:
+        args = get_combined_args(parser)
+    except FileNotFoundError:
+        print(f"Warning: cfg_args not found in {model_path}. Using default arguments.")
+        args = parser.parse_args(args_list)
 
     # Extract parameters
     dataset = model_params.extract(args)
@@ -68,4 +84,4 @@ def export_gaussian_model(model_path, iteration=20000):
 
 if __name__ == "__main__":
     model_path = "output/dnerf/bouncingballs"  # Your experiment path
-    export_gaussian_model(model_path, iteration=30000)
+    export_gaussian_model(model_path, iteration=20000)

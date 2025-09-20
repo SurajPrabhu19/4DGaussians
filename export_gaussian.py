@@ -20,21 +20,36 @@ def export_gaussian_model(model_path, iteration=20000):
     args_list = [
         '-s', 'data/dnerf/bouncingballs',
         '--model_path', model_path,
-        '--sh_degree', '3'
+        '--sh_degree', '3',
+        '--white_background', 'True',
+        '--eval', 'True'
     ]
-    args = parser.parse_args(args_list)
-
+    
+    # Debug cfg_args path
+    cfg_path = os.path.join(model_path, "cfg_args")
+    print(f"Attempting to load cfg_args from: {cfg_path}")
+    if os.path.exists(cfg_path):
+        try:
+            with open(cfg_path) as cfg_file:
+                cfg_content = cfg_file.read()
+                print(f"cfg_args content: {cfg_content}")
+        except Exception as e:
+            print(f"Error reading cfg_args: {e}")
+    
     # Try to merge with cfg_args if available
     try:
         args = get_combined_args(parser)
     except FileNotFoundError:
         print(f"Warning: cfg_args not found in {model_path}. Using default arguments.")
         args = parser.parse_args(args_list)
+    except Exception as e:
+        print(f"Error processing cfg_args: {e}. Using default arguments.")
+        args = parser.parse_args(args_list)
 
     # Extract parameters
     dataset = model_params.extract(args)
     pipeline = pipeline_params.extract(args)
-    gaussian_model = GaussianModel(dataset.sh_degree)
+    gaussian_model = GaussianModel(dataset.sh_degree, args)  # Pass args to GaussianModel
     ply_path = os.path.join(model_path, f"point_cloud/iteration_{iteration}/point_cloud.ply")
     
     # Verify PLY file exists

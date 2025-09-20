@@ -62,18 +62,33 @@ def export_gaussian_model(model_path, iteration=20000):
 
     # Load deformation data (time-varying)
     deformation_path = os.path.join(model_path, f"point_cloud/iteration_{iteration}/deformation_table.pth")
+    xyz_shape = gaussian_model.get_xyz.detach().cpu().numpy().shape
     if not os.path.exists(deformation_path):
-        print(f"Warning: Deformation file not found at {deformation_path}. Using zero deformations.")
-        deformation = np.zeros_like(gaussian_model.get_xyz.detach().cpu().numpy())
+        print(f"Warning: Deformation file not found at {deformation_path}. Trying deformation.pth.")
+        deformation_path = os.path.join(model_path, f"point_cloud/iteration_{iteration}/deformation.pth")
+        if not os.path.exists(deformation_path):
+            print(f"Warning: deformation.pth not found. Using zero deformations.")
+            deformation = np.zeros_like(gaussian_model.get_xyz.detach().cpu().numpy())
+        else:
+            deformation_table = torch.load(deformation_path, map_location='cpu')
+            print(f"deformation.pth shape: {deformation_table.shape}, sample: {deformation_table[:10]}")
+            if deformation_table.ndim == 2 and deformation_table.shape == (xyz_shape[0], 3):
+                deformation = deformation_table.detach().cpu().numpy()
+            else:
+                print(f"Warning: Unexpected deformation.pth shape {deformation_table.shape}. Using zero deformations.")
+                deformation = np.zeros_like(gaussian_model.get_xyz.detach().cpu().numpy())
     else:
         deformation_table = torch.load(deformation_path, map_location='cpu')
-        print(f"deformation_table shape: {deformation_table.shape}")
-        # Handle tensor directly; assume shape [N, 3, T] or [N, 3]
-        if deformation_table.ndim == 3:
-            # Select first time step for single PLY export
+        print(f"deformation_table shape: {deformation_table.shape}, sample: {deformation_table[:10]}")
+        # Handle tensor based on shape
+        if deformation_table.ndim == 1 and deformation_table.shape[0] == xyz_shape[0] * 3:
+            # Reshape [N*3] to [N, 3] for single time step
+            deformation = deformation_table.reshape(xyz_shape[0], 3).detach().cpu().numpy()
+        elif deformation_table.ndim == 3 and deformation_table.shape[0] == xyz_shape[0]:
+            # Select first time step [N, 3, T] -> [N, 3]
             deformation = deformation_table[:, :, 0].detach().cpu().numpy()
-        elif deformation_table.ndim == 2:
-            # Use directly if no time dimension
+        elif deformation_table.ndim == 2 and deformation_table.shape == (xyz_shape[0], 3):
+            # Use directly if [N, 3]
             deformation = deformation_table.detach().cpu().numpy()
         else:
             print(f"Warning: Unexpected deformation_table shape {deformation_table.shape}. Using zero deformations.")
@@ -81,10 +96,13 @@ def export_gaussian_model(model_path, iteration=20000):
 
     # Extract Gaussian attributes
     xyz = gaussian_model.get_xyz.detach().cpu().numpy()  # 3D positions
-    colors = gaussian_model.get_features.detach().cpu().numpy()[:, :3]  # RGB or first 3 SH coefficients
+    colors = gaussian_model.get_features.detach().cpu().numpy()[:, 0, :]  # Base SH coefficient for RGB
     opacity = gaussian_model.get_opacity.detach().cpu().numpy()  # Alpha values
     scale = gaussian_model.get_scaling.detach().cpu().numpy()  # Scale per axis
     rotation = gaussian_model.get_rotation.detach().cpu().numpy()  # Quaternion rotations
+
+    print(f"xyz shape: {xyz.shape}, colors shape: {colors.shape}, opacity shape: {opacity.shape}, "
+          f"scale shape: {scale.shape}, rotation shape: {rotation.shape}, deformation shape: {deformation.shape}")
 
     # Combine with deformation (time-varying offsets)
     vertex_data = np.zeros(len(xyz), dtype=[
@@ -95,12 +113,23 @@ def export_gaussian_model(model_path, iteration=20000):
         ('rot_0', 'f4'), ('rot_1', 'f4'), ('rot_2', 'f4'), ('rot_3', 'f4'),  # Quaternion
         ('deform_x', 'f4'), ('deform_y', 'f4'), ('deform_z', 'f4')  # Deformation offsets
     ])
-    vertex_data['x'], vertex_data['y'], vertex_data['z'] = xyz[:, 0], xyz[:, 1], xyz[:, 2]
-    vertex_data['r'], vertex_data['g'], vertex_data['b'] = colors[:, 0], colors[:, 1], colors[:, 2]
-    vertex_data['opacity'] = opacity
-    vertex_data['scale_x'], vertex_data['scale_y'], vertex_data['scale_z'] = scale[:, 0], scale[:, 1], scale[:, 2]
-    vertex_data['rot_0'], vertex_data['rot_1'], vertex_data['rot_2'], vertex_data['rot_3'] = rotation[:, 0], rotation[:, 1], rotation[:, 2], rotation[:, 3]
-    vertex_data['deform_x'], vertex_data['deform_y'], vertex_data['deform_z'] = deformation[:, 0], deformation[:, 1], deformation[:, 2]
+    vertex_data['x'] = xyz[:, 0].astype(np.float32)
+    vertex_data['y'] = xyz[:, 1].astype(np.float32)
+    vertex_data['z'] = xyz[:, 2].astype(np.float32)
+    vertex_data['r'] = colors[:, 0].astype(np.float32)
+    vertex_data['g'] = colors[:, 1].astype(np.float32)
+    vertex_data['b'] = colors[:, 2].astype(np.float32)
+    vertex_data['opacity'] = opacity.squeeze().astype(np.float32)  # Remove singleton dimension
+    vertex_data['scale_x'] = scale[:, 0].astype(np.float32)
+    vertex_data['scale_y'] = scale[:, 1].astype(np.float32)
+    vertex_data['scale_z'] = scale[:, 2].astype(np.float32)
+    vertex_data['rot_0'] = rotation[:, 0].astype(np.float32)
+    vertex_data['rot_1'] = rotation[:, 1].astype(np.float32)
+    vertex_data['rot_2'] = rotation[:, 2].astype(np.float32)
+    vertex_data['rot_3'] = rotation[:, 3].astype(np.float32)
+    vertex_data['deform_x'] = deformation[:, 0].astype(np.float32)
+    vertex_data['deform_y'] = deformation[:, 1].astype(np.float32)
+    vertex_data['deform_z'] = deformation[:, 2].astype(np.float32)
 
     # Save to PLY
     output_ply = os.path.join(model_path, 'exported_gaussian.ply')
